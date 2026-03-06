@@ -19,7 +19,9 @@ export function activate(context: vscode.ExtensionContext): void {
   const decorations = new DecorationProvider(tracker);
 
   vscode.window.registerTreeDataProvider('claudeChanges', sidebar);
-  vscode.languages.registerCodeLensProvider({ pattern: '**/*' }, decorations);
+  context.subscriptions.push(
+    vscode.languages.registerCodeLensProvider({ pattern: '**/*' }, decorations)
+  );
 
   context.subscriptions.push(
     vscode.window.onDidChangeVisibleTextEditors(() => decorations.applyDecorations())
@@ -130,6 +132,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(statusBar);
+  context.subscriptions.push(decorations);
 }
 
 export function deactivate(): void {}

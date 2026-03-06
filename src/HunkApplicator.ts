@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import { Hunk } from './DiffParser';
 
 export function buildReversePatch(hunk: Hunk, workspaceRoot: string): string {
-  const relPath = hunk.filePath;
+  const relPath = path.relative(workspaceRoot, hunk.filePath);
   const header = `--- a/${relPath}\n+++ b/${relPath}\n`;
   const hunkHeader = `@@ -${hunk.oldStart},${hunk.oldCount} +${hunk.newStart},${hunk.newCount} @@\n`;
   const body = hunk.lines.join('\n') + '\n';

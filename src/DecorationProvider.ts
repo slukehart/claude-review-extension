@@ -1,21 +1,27 @@
 import * as vscode from 'vscode';
 import { ChangeTracker } from './ChangeTracker';
 
-const addedDecoration = vscode.window.createTextEditorDecorationType({
-  backgroundColor: 'rgba(0, 255, 0, 0.12)',
-  isWholeLine: true,
-});
-
-const approvedDecoration = vscode.window.createTextEditorDecorationType({
-  after: { contentText: ' ✓', color: 'rgba(100,200,100,0.8)' },
-  isWholeLine: true,
-});
-
-export class DecorationProvider implements vscode.CodeLensProvider {
+export class DecorationProvider implements vscode.CodeLensProvider, vscode.Disposable {
   private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
   readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
 
+  private readonly addedDecoration = vscode.window.createTextEditorDecorationType({
+    backgroundColor: 'rgba(0, 255, 0, 0.12)',
+    isWholeLine: true,
+  });
+
+  private readonly approvedDecoration = vscode.window.createTextEditorDecorationType({
+    after: { contentText: ' ✓', color: 'rgba(100,200,100,0.8)' },
+    isWholeLine: true,
+  });
+
   constructor(private readonly tracker: ChangeTracker) {}
+
+  dispose(): void {
+    this.addedDecoration.dispose();
+    this.approvedDecoration.dispose();
+    this._onDidChangeCodeLenses.dispose();
+  }
 
   refresh(): void {
     this._onDidChangeCodeLenses.fire();
@@ -56,8 +62,8 @@ export class DecorationProvider implements vscode.CodeLensProvider {
       const hunks = this.tracker.getHunks(filePath);
 
       if (!hunks) {
-        editor.setDecorations(addedDecoration, []);
-        editor.setDecorations(approvedDecoration, []);
+        editor.setDecorations(this.addedDecoration, []);
+        editor.setDecorations(this.approvedDecoration, []);
         continue;
       }
 
@@ -81,8 +87,8 @@ export class DecorationProvider implements vscode.CodeLensProvider {
         }
       }
 
-      editor.setDecorations(addedDecoration, addedRanges);
-      editor.setDecorations(approvedDecoration, approvedRanges);
+      editor.setDecorations(this.addedDecoration, addedRanges);
+      editor.setDecorations(this.approvedDecoration, approvedRanges);
     }
   }
 }

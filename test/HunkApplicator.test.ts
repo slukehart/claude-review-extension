@@ -7,7 +7,7 @@ import child_process = require('child_process');
 function makeHunk(overrides: Partial<Hunk> = {}): Hunk {
   return {
     id: 'src/foo.ts:5',
-    filePath: 'src/foo.ts',
+    filePath: '/workspace/src/foo.ts',
     oldStart: 5,
     oldCount: 2,
     newStart: 5,
