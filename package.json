@@ -1,0 +1,61 @@
+{
+  "name": "claude-review-extension",
+  "displayName": "Claude Review",
+  "description": "Review and approve/reject Claude's file changes at the hunk level",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "claudeReview.toggleSession",
+        "title": "Toggle Claude Session"
+      },
+      {
+        "command": "claudeReview.approveHunk",
+        "title": "Approve Hunk"
+      },
+      {
+        "command": "claudeReview.rejectHunk",
+        "title": "Reject Hunk"
+      },
+      {
+        "command": "claudeReview.approveAllInFile",
+        "title": "Approve All"
+      },
+      {
+        "command": "claudeReview.rejectAllInFile",
+        "title": "Reject All"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "claudeChanges",
+          "name": "Claude Changes"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "mocha --require ts-node/register 'test/**/*.test.ts'"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.3.5",
+    "@types/sinon": "^21.0.0",
+    "@types/vscode": "^1.109.0",
+    "mocha": "^11.7.5",
+    "sinon": "^21.0.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
