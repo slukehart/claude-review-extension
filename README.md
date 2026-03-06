@@ -19,6 +19,22 @@ No modals, no popups — everything happens inline where you're already working.
 - **Sidebar panel** — "Claude Changes" view lists all modified files with per-file Approve All / Reject All actions
 - **Git-based baseline** — uses `git stash create` to snapshot your working tree at session start without touching your uncommitted changes
 
+## Installation
+
+### From the VS Code Marketplace
+Search for **Claude Review** in the VS Code Extensions panel and click Install.
+
+### Manual install from `.vsix`
+```bash
+git clone https://github.com/slukehart/claude-review-extension
+cd claude-review-extension
+npm install
+npm run compile
+npx vsce package
+code --install-extension claude-review-extension-0.0.1.vsix
+```
+Then restart VS Code.
+
 ## Requirements
 
 - The workspace must be a **git repository**
