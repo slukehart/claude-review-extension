@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { execSync } from 'child_process';
+import { spawnSync } from 'child_process';
 import { SessionManager } from './SessionManager';
 import { ChangeTracker } from './ChangeTracker';
 import { StatusBarController } from './StatusBarController';
@@ -32,15 +32,16 @@ export function activate(context: vscode.ExtensionContext): void {
     if (relPath.startsWith('.git')) return;
 
     try {
-      const diff = execSync(
-        `git diff ${session.sessionBaseline} -- "${relPath}"`,
-        { cwd: workspaceRoot }
-      ).toString();
+      const result = spawnSync(
+        'git',
+        ['diff', session.sessionBaseline!, '--', relPath],
+        { cwd: workspaceRoot, encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 }
+      );
+      if (result.error || result.status !== 0) return;
+      const diff = result.stdout;
 
       const hunks = parseDiff(diff, fsPath);
-      if (hunks.length > 0) {
-        tracker.setHunks(fsPath, hunks);
-      }
+      tracker.setHunks(fsPath, hunks);
 
       sidebar.refresh();
       decorations.refresh();
