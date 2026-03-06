@@ -3,7 +3,11 @@
   "displayName": "Claude Review",
   "description": "Review and approve/reject Claude's file changes at the hunk level",
   "version": "0.0.1",
-  "publisher": "slukehart",
+  "publisher": "Spencer Lukehart",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/slukehart/claude-review-extension"
+  },
   "engines": {
     "vscode": "^1.109.0"
   },
