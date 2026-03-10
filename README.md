@@ -31,7 +31,7 @@ cd claude-review-extension
 npm install
 npm run compile
 npx vsce package
-code --install-extension claude-review-extension-0.0.1.vsix
+code --install-extension claude-review-extension-0.0.2.vsix
 ```
 Then restart VS Code.
 
