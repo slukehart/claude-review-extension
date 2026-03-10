@@ -12,8 +12,8 @@ import { rejectHunk } from './HunkApplicator';
 export function activate(context: vscode.ExtensionContext): void {
   const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 
-  const tracker = new ChangeTracker();
-  const session = new SessionManager();
+  const tracker = new ChangeTracker(context.workspaceState);
+  const session = new SessionManager(context.workspaceState);
   const statusBar = new StatusBarController();
   const sidebar = new SidebarProvider(tracker);
   const decorations = new DecorationProvider(tracker);
@@ -25,7 +25,6 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.languages.registerHoverProvider({ pattern: '**/*' }, decorations)
   );
-
   context.subscriptions.push(
     vscode.window.onDidChangeVisibleTextEditors(() => decorations.applyDecorations())
   );
@@ -44,16 +43,22 @@ export function activate(context: vscode.ExtensionContext): void {
         { cwd: workspaceRoot, encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 }
       );
       if (result.error || result.status !== 0) return;
-      const diff = result.stdout;
 
-      const hunks = parseDiff(diff, fsPath);
+      const hunks = parseDiff(result.stdout, fsPath);
       tracker.setHunks(fsPath, hunks);
-
       sidebar.refresh();
       decorations.refresh();
     } catch {
       // Binary file or outside git — ignore
     }
+  }
+
+  // Restore UI and watcher if a session was active before restart
+  if (session.isActive && workspaceRoot) {
+    session.resume(workspaceRoot, handleFileChange);
+    statusBar.setActive();
+    sidebar.refresh();
+    decorations.refresh();
   }
 
   context.subscriptions.push(
@@ -95,7 +100,6 @@ export function activate(context: vscode.ExtensionContext): void {
       const hunks = tracker.getHunks(filePath);
       const hunk = hunks?.find(h => h.id === hunkId);
       if (!hunk) return;
-
       try {
         await rejectHunk(hunk, workspaceRoot);
         tracker.removeHunk(filePath, hunkId);
