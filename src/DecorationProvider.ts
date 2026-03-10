@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 import { ChangeTracker } from './ChangeTracker';
+import { Hunk } from './DiffParser';
+import { buildHoverMarkdown } from './hoverMarkdown';
 
-export class DecorationProvider implements vscode.CodeLensProvider, vscode.Disposable {
+export class DecorationProvider implements vscode.CodeLensProvider, vscode.HoverProvider, vscode.Disposable {
   private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
   readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
 
@@ -54,6 +56,32 @@ export class DecorationProvider implements vscode.CodeLensProvider, vscode.Dispo
         }),
       ];
     });
+  }
+
+  provideHover(document: vscode.TextDocument, position: vscode.Position): vscode.Hover | null {
+    const filePath = document.uri.fsPath;
+    const hunks = this.tracker.getHunks(filePath);
+    if (!hunks) return null;
+
+    const hunk = this.findHunkAtLine(hunks, position.line + 1);
+    if (!hunk) return null;
+
+    const md = new vscode.MarkdownString(buildHoverMarkdown(hunk));
+    md.isTrusted = true;
+    return new vscode.Hover(md);
+  }
+
+  private findHunkAtLine(hunks: Hunk[], oneBased: number): Hunk | undefined {
+    for (const hunk of hunks) {
+      if (hunk.newCount === 0) {
+        // Pure deletion: match the insertion-point line
+        if (oneBased === hunk.newStart) return hunk;
+      } else {
+        const end = hunk.newStart + hunk.newCount - 1;
+        if (oneBased >= hunk.newStart && oneBased <= end) return hunk;
+      }
+    }
+    return undefined;
   }
 
   applyDecorations(): void {

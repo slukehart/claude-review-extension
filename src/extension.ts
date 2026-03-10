@@ -22,6 +22,9 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.languages.registerCodeLensProvider({ pattern: '**/*' }, decorations)
   );
+  context.subscriptions.push(
+    vscode.languages.registerHoverProvider({ pattern: '**/*' }, decorations)
+  );
 
   context.subscriptions.push(
     vscode.window.onDidChangeVisibleTextEditors(() => decorations.applyDecorations())
