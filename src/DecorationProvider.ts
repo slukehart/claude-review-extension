@@ -12,16 +12,10 @@ export class DecorationProvider implements vscode.CodeLensProvider, vscode.Hover
     isWholeLine: true,
   });
 
-  private readonly approvedDecoration = vscode.window.createTextEditorDecorationType({
-    after: { contentText: ' ✓', color: 'rgba(100,200,100,0.8)' },
-    isWholeLine: true,
-  });
-
   constructor(private readonly tracker: ChangeTracker) {}
 
   dispose(): void {
     this.addedDecoration.dispose();
-    this.approvedDecoration.dispose();
     this._onDidChangeCodeLenses.dispose();
   }
 
@@ -36,12 +30,10 @@ export class DecorationProvider implements vscode.CodeLensProvider, vscode.Hover
     if (!hunks) return [];
 
     return hunks.flatMap(hunk => {
+      if (hunk.approved) return [];
+
       const line = Math.max(0, hunk.newStart - 1);
       const range = new vscode.Range(line, 0, line, 0);
-
-      if (hunk.approved) {
-        return [new vscode.CodeLens(range, { title: '✓ Approved', command: '' })];
-      }
 
       return [
         new vscode.CodeLens(range, {
@@ -91,23 +83,17 @@ export class DecorationProvider implements vscode.CodeLensProvider, vscode.Hover
 
       if (!hunks) {
         editor.setDecorations(this.addedDecoration, []);
-        editor.setDecorations(this.approvedDecoration, []);
         continue;
       }
 
       const addedRanges: vscode.Range[] = [];
-      const approvedRanges: vscode.Range[] = [];
 
       for (const hunk of hunks) {
+        if (hunk.approved) continue;
         let lineOffset = hunk.newStart - 1;
         for (const line of hunk.lines) {
           if (line.startsWith('+')) {
-            const range = new vscode.Range(lineOffset, 0, lineOffset, 0);
-            if (hunk.approved) {
-              approvedRanges.push(range);
-            } else {
-              addedRanges.push(range);
-            }
+            addedRanges.push(new vscode.Range(lineOffset, 0, lineOffset, 0));
             lineOffset++;
           } else if (line.startsWith(' ')) {
             lineOffset++;
@@ -116,7 +102,6 @@ export class DecorationProvider implements vscode.CodeLensProvider, vscode.Hover
       }
 
       editor.setDecorations(this.addedDecoration, addedRanges);
-      editor.setDecorations(this.approvedDecoration, approvedRanges);
     }
   }
 }

@@ -22,6 +22,11 @@ export class ChangeTracker {
   }
 
   setHunks(filePath: string, hunks: Hunk[]): void {
+    const existing = this.fileHunks.get(filePath) ?? [];
+    const approvedIds = new Set(existing.filter(h => h.approved).map(h => h.id));
+    for (const hunk of hunks) {
+      if (approvedIds.has(hunk.id)) hunk.approved = true;
+    }
     this.fileHunks.set(filePath, hunks);
     this.persist();
   }
