@@ -1,10 +1,29 @@
+import * as vscode from 'vscode';
 import { Hunk } from './DiffParser';
 
 export class ChangeTracker {
   private fileHunks: Map<string, Hunk[]> = new Map();
+  private ctx?: vscode.Memento;
+
+  constructor(ctx?: vscode.Memento) {
+    this.ctx = ctx;
+    if (ctx) {
+      const stored = ctx.get<Record<string, Hunk[]>>('claudeReview.hunks');
+      if (stored) {
+        for (const [filePath, hunks] of Object.entries(stored)) {
+          this.fileHunks.set(filePath, hunks);
+        }
+      }
+    }
+  }
+
+  private persist(): void {
+    this.ctx?.update('claudeReview.hunks', Object.fromEntries(this.fileHunks));
+  }
 
   setHunks(filePath: string, hunks: Hunk[]): void {
     this.fileHunks.set(filePath, hunks);
+    this.persist();
   }
 
   getHunks(filePath: string): Hunk[] | undefined {
@@ -19,7 +38,10 @@ export class ChangeTracker {
     const hunks = this.fileHunks.get(filePath);
     if (!hunks) return;
     const hunk = hunks.find(h => h.id === hunkId);
-    if (hunk) hunk.approved = true;
+    if (hunk) {
+      hunk.approved = true;
+      this.persist();
+    }
   }
 
   removeHunk(filePath: string, hunkId: string): void {
@@ -31,6 +53,7 @@ export class ChangeTracker {
     } else {
       this.fileHunks.set(filePath, filtered);
     }
+    this.persist();
   }
 
   hasUnresolved(filePath: string): boolean {
@@ -41,5 +64,6 @@ export class ChangeTracker {
 
   clear(): void {
     this.fileHunks.clear();
+    this.persist();
   }
 }
