@@ -29,6 +29,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   async function handleFileChange(fsPath: string): Promise<void> {
     if (!workspaceRoot || !session.isActive || !session.sessionBaseline) return;
+    if (session.isUserSave(fsPath)) return;
 
     const relPath = path.relative(workspaceRoot, fsPath);
     if (relPath.startsWith('.git')) return;
